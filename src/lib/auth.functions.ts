@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { loginSchema, registrationSchema } from "./validation";
@@ -21,7 +22,7 @@ function publicClient() {
 
 /** Customer.register() — validates on the server, then creates the identity; the DB trigger creates Customer, Account and KYC record. */
 export const registerCustomer = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => registrationSchema.extend({ redirect: registrationSchema.shape.email.optional() }).passthrough().parse(input))
+  .inputValidator((input: unknown) => registrationSchema.extend({ origin: z.string().url().optional() }).parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: existing } = await supabaseAdmin
@@ -32,7 +33,7 @@ export const registerCustomer = createServerFn({ method: "POST" })
     if (existing && existing.length > 0) {
       return { ok: false as const, error: "An account already exists with this email or mobile number." };
     }
-    const origin = (data as { origin?: string }).origin;
+    const origin = data.origin;
     const { data: res, error } = await publicClient().auth.signUp({
       email: data.email,
       password: data.password,
