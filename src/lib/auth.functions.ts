@@ -38,7 +38,7 @@ export const registerCustomer = createServerFn({ method: "POST" })
       email: data.email,
       password: data.password,
       options: {
-        emailRedirectTo: origin,
+        ...(origin ? { emailRedirectTo: origin } : {}),
         data: {
           kind: "customer",
           full_name: data.full_name,
@@ -75,7 +75,7 @@ export const signInCustomer = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (isLocked(lock, now)) {
-      await supabaseAdmin.from("login_events").insert({ identifier: data.email, success: false, reason: "LOCKED", device_fingerprint: data.device });
+      await supabaseAdmin.from("login_events").insert({ identifier: data.email, success: false, reason: "LOCKED", device_fingerprint: data.device ?? null });
       return { ok: false as const, error: LOCKED_ERROR };
     }
 
@@ -88,7 +88,7 @@ export const signInCustomer = createServerFn({ method: "POST" })
         identifier: data.email,
         success: false,
         reason: error?.message?.includes("confirm") ? "EMAIL_UNCONFIRMED" : "BAD_CREDENTIALS",
-        device_fingerprint: data.device,
+        device_fingerprint: data.device ?? null,
       });
       if (next.locked_until) {
         await supabaseAdmin.from("audit_logs").insert({ action: "LOGIN_LOCKED", entity: "login", entity_id: data.email, details: { until: next.locked_until } });
@@ -101,7 +101,7 @@ export const signInCustomer = createServerFn({ method: "POST" })
     }
 
     await supabaseAdmin.from("login_lockouts").upsert({ identifier: data.email, failed_count: 0, locked_until: null, updated_at: now.toISOString() });
-    await supabaseAdmin.from("login_events").insert({ user_id: auth.user.id, identifier: data.email, success: true, device_fingerprint: data.device });
+    await supabaseAdmin.from("login_events").insert({ user_id: auth.user.id, identifier: data.email, success: true, device_fingerprint: data.device ?? null });
     await supabaseAdmin.from("audit_logs").insert({ actor_id: auth.user.id, action: "LOGIN", entity: "user", entity_id: auth.user.id });
 
     return {
