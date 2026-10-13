@@ -1,9 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getMyOverview } from "@/lib/me.functions";
 import { formatDateTime, formatINR, maskAccount } from "@/lib/format";
+import { ArrowLeftRight, CreditCard, FileText, Users, User } from "lucide-react";
 
 const overviewQuery = queryOptions({ queryKey: ["me", "overview"], queryFn: () => getMyOverview() });
 
@@ -23,6 +25,14 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function statusVariant(s: string) {
   return s === "Active" || s === "Verified" ? "default" : s === "Frozen" || s === "Rejected" ? "destructive" : "secondary";
 }
+
+const quickActions = [
+  { to: "/transfer", label: "Transfer", icon: ArrowLeftRight, color: "text-blue-600" },
+  { to: "/accounts", label: "Accounts", icon: CreditCard, color: "text-emerald-600" },
+  { to: "/statements", label: "Statements", icon: FileText, color: "text-amber-600" },
+  { to: "/beneficiaries", label: "Beneficiaries", icon: Users, color: "text-purple-600" },
+  { to: "/profile", label: "Profile", icon: User, color: "text-pink-600" },
+] as const;
 
 function Dashboard() {
   const { data } = useSuspenseQuery(overviewQuery);
@@ -52,9 +62,31 @@ function Dashboard() {
               <CardContent className="flex items-center gap-2">
                 <Badge variant={statusVariant(customer.kyc_status)}>{customer.kyc_status}</Badge>
                 {customer.is_premium && <Badge variant="outline">Premium</Badge>}
+                {customer.kyc_status === "Pending" && (
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to="/profile">Verify KYC</Link>
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
+
+          {/* Quick actions */}
+          <Card>
+            <CardHeader><CardTitle className="font-display">Quick actions</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {quickActions.map((a) => (
+                  <Button key={a.to} variant="outline" asChild className="h-auto flex-col gap-1 px-6 py-4">
+                    <Link to={a.to}>
+                      <a.icon className={`h-5 w-5 ${a.color}`} />
+                      <span className="text-xs">{a.label}</span>
+                    </Link>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader><CardTitle className="font-display">Accounts</CardTitle></CardHeader>
@@ -73,7 +105,10 @@ function Dashboard() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="font-display">Recent transactions</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="font-display">Recent transactions</CardTitle>
+              <Button variant="ghost" size="sm" asChild><Link to="/statements">View all</Link></Button>
+            </CardHeader>
             <CardContent>
               {recent.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">No transactions yet.</p>
@@ -85,7 +120,12 @@ function Dashboard() {
                         <p>{t.remarks ?? t.type}</p>
                         <p className="figure text-xs text-muted-foreground">{t.reference} · {formatDateTime(t.created_at)}</p>
                       </div>
-                      <p className="figure">{formatINR(t.amount)}</p>
+                      <div className="text-right">
+                        <p className="figure">{formatINR(t.amount)}</p>
+                        <Badge variant={t.status === "Posted" || t.status === "Settled" ? "default" : t.status === "Failed" || t.status === "Blocked" ? "destructive" : "secondary"} className="text-[10px]">
+                          {t.status}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>

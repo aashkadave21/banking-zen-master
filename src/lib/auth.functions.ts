@@ -22,7 +22,7 @@ function publicClient() {
 
 /** Customer.register() — validates on the server, then creates the identity; the DB trigger creates Customer, Account and KYC record. */
 export const registerCustomer = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => registrationSchema.extend({ origin: z.string().url().optional() }).parse(input))
+  .validator((input: unknown) => registrationSchema.extend({ origin: z.string().url().optional() }).parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: existing } = await supabaseAdmin
@@ -64,7 +64,7 @@ export const registerCustomer = createServerFn({ method: "POST" })
 
 /** User.login() — enforces Order.Login.Auth (generic error) and Order.Login.Lock on the server. */
 export const signInCustomer = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => loginSchema.parse(input))
+  .validator((input: unknown) => loginSchema.parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const now = new Date();

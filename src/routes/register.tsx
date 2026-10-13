@@ -51,8 +51,14 @@ function RegisterPage() {
       const res = await register({ data: { ...values, origin: window.location.origin } });
       if (!res.ok) return setServerError(res.error);
       setDone({ customerId: res.customerId, kycReference: res.kycReference });
-    } catch {
-      setServerError("Some details are invalid. Please review the form.");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "object" && err !== null && "message" in err
+            ? String((err as { message: unknown }).message)
+            : "Some details are invalid. Please review the form.";
+      setServerError(message);
     }
   }
 

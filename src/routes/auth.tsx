@@ -50,8 +50,14 @@ function AuthPage() {
       }
       await supabase.auth.setSession({ access_token: res.access_token, refresh_token: res.refresh_token });
       navigate({ to: "/dashboard", replace: true });
-    } catch {
-      setError("Please check your details and try again.");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "object" && err !== null && "message" in err
+            ? String((err as { message: unknown }).message)
+            : "Please check your details and try again.";
+      setError(message);
     } finally {
       setBusy(false);
     }
