@@ -30,39 +30,39 @@ export const updateProfile = createServerFn({ method: "POST" })
     const before: Record<string, string> = {};
     const after: Record<string, string> = {};
 
-    if (data.address !== undefined && data.address !== current.address) {
-      updates.address = data.address;
-      before.address = current.address ?? "";
-      after.address = data.address;
+    if (data["address"] !== undefined && data["address"] !== current.address) {
+      updates["address"] = data["address"];
+      before["address"] = current.address ?? "";
+      after["address"] = data["address"];
     }
-    if (data.email !== undefined && data.email !== current.email) {
+    if (data["email"] !== undefined && data["email"] !== current.email) {
       // Check uniqueness
       const { data: existing } = await supabaseAdmin
         .from("profiles")
         .select("id")
-        .eq("email", data.email)
+        .eq("email", data["email"])
         .neq("id", userId)
         .limit(1);
       if (existing && existing.length > 0) {
         return { ok: false as const, error: "This email is already registered." };
       }
-      updates.email = data.email;
-      before.email = current.email;
-      after.email = data.email;
+      updates["email"] = data["email"];
+      before["email"] = current.email;
+      after["email"] = data["email"];
     }
-    if (data.mobile_no !== undefined && data.mobile_no !== current.mobile_no) {
+    if (data["mobile_no"] !== undefined && data["mobile_no"] !== current.mobile_no) {
       const { data: existing } = await supabaseAdmin
         .from("profiles")
         .select("id")
-        .eq("mobile_no", data.mobile_no)
+        .eq("mobile_no", data["mobile_no"])
         .neq("id", userId)
         .limit(1);
       if (existing && existing.length > 0) {
         return { ok: false as const, error: "This mobile number is already registered." };
       }
-      updates.mobile_no = data.mobile_no;
-      before.mobile_no = current.mobile_no;
-      after.mobile_no = data.mobile_no;
+      updates["mobile_no"] = data["mobile_no"];
+      before["mobile_no"] = current.mobile_no;
+      after["mobile_no"] = data["mobile_no"];
     }
 
     if (Object.keys(updates).length === 0) {

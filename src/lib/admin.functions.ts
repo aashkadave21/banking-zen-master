@@ -34,7 +34,7 @@ export const updateSystemConfig = createServerFn({ method: "POST" })
     }
 
     const { error } = await supabaseAdmin.from("system_config").update({
-      value: data.value,
+      value: data.value as any,
       updated_at: new Date().toISOString(),
     }).eq("key", data.key);
 
@@ -45,7 +45,7 @@ export const updateSystemConfig = createServerFn({ method: "POST" })
       action: "CONFIG_UPDATED",
       entity: "system_config",
       entity_id: data.key,
-      details: { value: data.value },
+      details: { value: data.value } as any,
     });
 
     return { ok: true as const, message: "Config updated." };

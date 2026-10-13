@@ -68,7 +68,7 @@ function StatementsPage() {
     if (accountsLoaded) return;
     const res = await doAccounts();
     setAccounts(res.accounts);
-    if (res.accounts.length > 0) {
+    if (res.accounts.length > 0 && res.accounts[0]) {
       setSelectedAccount(res.accounts[0].id);
     }
     setAccountsLoaded(true);

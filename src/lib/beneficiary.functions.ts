@@ -124,7 +124,7 @@ export const activateBeneficiary = createServerFn({ method: "POST" })
       .select("value")
       .eq("key", "beneficiary")
       .single();
-    const coolingMinutes = config?.value?.cooling_off_minutes ?? 30;
+    const coolingMinutes = ((config?.value as any)?.cooling_off_minutes as number) ?? 30;
 
     const coolUntil = new Date(Date.now() + coolingMinutes * 60 * 1000).toISOString();
 
@@ -179,8 +179,8 @@ export const updateBeneficiary = createServerFn({ method: "POST" })
     if (!customer) return { ok: false as const, error: "Customer not found." };
 
     const updates: Record<string, string> = {};
-    if (data.nickname) updates.nickname = data.nickname;
-    if (data.beneficiary_name) updates.beneficiary_name = data.beneficiary_name;
+    if (data["nickname"]) updates["nickname"] = data["nickname"];
+    if (data["beneficiary_name"]) updates["beneficiary_name"] = data["beneficiary_name"];
 
     if (Object.keys(updates).length === 0) {
       return { ok: true as const, message: "No changes." };

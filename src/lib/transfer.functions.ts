@@ -277,7 +277,7 @@ export const completeTransfer = createServerFn({ method: "POST" })
     const { data: source } = await supabaseAdmin
       .from("accounts")
       .select("id, balance, min_balance, status")
-      .eq("id", txn.source_account_id)
+      .eq("id", txn.source_account_id as string)
       .single();
 
     if (!source || source.status !== "Active") {
@@ -321,7 +321,7 @@ export const completeTransfer = createServerFn({ method: "POST" })
       // External — credit to clearing/settlement
       ledgerEntries.push({ transaction_id: txn.id, account_id: null, ledger_code: "CLEARING", entry_type: "CREDIT", amount: txn.amount, balance_after: null, narration: `Settlement for ${txn.reference}` });
     }
-    await supabaseAdmin.from("ledger_entries").insert(ledgerEntries);
+    await supabaseAdmin.from("ledger_entries").insert(ledgerEntries as any);
 
     // Update transaction
     await supabaseAdmin.from("transactions").update({

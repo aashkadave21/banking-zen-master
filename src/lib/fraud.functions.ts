@@ -4,16 +4,17 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** FraudEngine.score(txn) — scores a transaction 0-100 based on triggered rules. */
 export async function scoreTxn(
-  supabaseAdmin: ReturnType<typeof import("@supabase/supabase-js").createClient>,
+  supabaseAdmin: any,
   txn: { id: string; amount: number; source_account_id: string; beneficiary_id: string | null; initiated_by: string },
 ) {
   // Get enabled rules
-  const { data: rules } = await supabaseAdmin
+  const { data: rulesData } = await supabaseAdmin
     .from("fraud_rules")
     .select("*")
     .eq("enabled", true);
 
-  if (!rules || rules.length === 0) return { score: 0, band: "LOW" as const, triggered: [] };
+  const rules: any[] = rulesData || [];
+  if (rules.length === 0) return { score: 0, band: "LOW" as const, triggered: [] };
 
   // Get customer limits
   const { data: customer } = await supabaseAdmin
@@ -115,7 +116,7 @@ export async function scoreTxn(
 
 /** FraudCase.escalate() — creates a fraud case for HIGH-risk transactions. */
 export async function escalateToFraudCase(
-  supabaseAdmin: ReturnType<typeof import("@supabase/supabase-js").createClient>,
+  supabaseAdmin: any,
   txnId: string,
   accountId: string,
   score: number,
@@ -124,13 +125,13 @@ export async function escalateToFraudCase(
 ) {
   const caseId = "FC-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-  await supabaseAdmin.from("fraud_cases").insert({
+  await (supabaseAdmin as any).from("fraud_cases").insert({
     case_id: caseId,
     transaction_id: txnId,
     account_id: accountId,
     risk_score: score,
     risk_band: band,
-    triggered_rules: triggeredRules,
+    triggered_rules: triggeredRules as any,
     status: "Open",
     escalation_history: [{ event: "ESCALATED", timestamp: new Date().toISOString(), detail: `Auto-escalated: score ${score}, band ${band}` }],
   });
@@ -219,7 +220,7 @@ export const reviewFraudCase = createServerFn({ method: "POST" })
     await supabaseAdmin.from("fraud_cases").update({
       status: data.decision,
       assigned_analyst: userId,
-      escalation_history: history,
+      escalation_history: history as any,
       updated_at: new Date().toISOString(),
     }).eq("id", data.case_id);
 
